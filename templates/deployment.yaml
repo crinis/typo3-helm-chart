@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "typo3.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "typo3.name" . }}
+    helm.sh/chart: {{ include "typo3.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "typo3.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "typo3.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: typo3
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: TYPO3_SITE_NAME
+              value: {{ .Values.typo3.siteName | quote }}
+            - name: TYPO3_ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "typo3.fullname" . }}
+                  key: typo3-admin-username
+            - name: TYPO3_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "typo3.fullname" . }}
+                  key: typo3-admin-password
+            - name: TYPO3_CONTEXT
+              value: {{ .Values.typo3.context | quote }}
+          {{- if .Values.typo3.version }}
+            - name: TYPO3_VERSION
+              value: {{ .Values.typo3.version | quote }}
+          {{- end }}
+            - name: CLEANUP_SRC
+              value: {{ .Values.typo3.cleanupSources | quote }}
+            - name: MODIFY_LOCAL_CONFIGURATION
+              value: {{ .Values.typo3.modifyLocalConfiguration | quote }}
+          {{- if .Values.typo3.apacheAdminEmail }}
+            - name: SERVER_ADMIN_EMAIL
+              value: {{ .Values.typo3.apacheAdminEmail | quote }}
+          {{- end }}
+            - name: TYPO3_DB_HOST
+              value: {{ include "mysql.mysql.fullname" . }}
+            - name: TYPO3_DB_PORT
+              value: "3306"
+            - name: TYPO3_DB_NAME
+              value: {{ .Values.mysql.mysqlDatabase | quote }}
+            - name: TYPO3_DB_USERNAME
+              value: {{ .Values.mysql.mysqlUser | quote }}
+            - name: TYPO3_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mysql.mysql.fullname" . }}
+                  key: mysql-password
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          volumeMounts:
+          {{- if .Values.configurationFiles.apache }}
+            - name: configuration-apache
+              mountPath: /etc/apache2/conf-enabled/typo3-helm.conf
+              subPath: typo3-helm.conf
+          {{- end }}
+          {{- if .Values.configurationFiles.php }}
+            - name: configuration-php
+              mountPath: /usr/local/etc/php/conf.d/typo3-helm.ini
+              subPath: typo3-helm.ini
+          {{- end }}
+          {{- if .Values.configurationFiles.typo3 }}
+            - name: configuration-typo3
+              mountPath: /docker/config/local-configuration-overrides.yml
+              subPath: local-configuration-overrides.yml
+          {{- end }}
+            - name: docroot
+              mountPath: /var/www/html/
+          resources:
+            {{- toYaml .Values.typo3.resources | nindent 12 }}
+      volumes:
+      {{- if .Values.configurationFiles.apache }}
+        - name: configuration-apache
+          configMap:
+            name: {{ include "typo3.fullname" . }}-apache
+      {{- end }}
+      {{- if .Values.configurationFiles.php }}
+        - name: configuration-php
+          configMap:
+            name: {{ include "typo3.fullname" . }}-php
+      {{- end }}
+      {{- if .Values.configurationFiles.typo3 }}
+        - name: configuration-typo3
+          configMap:
+            name: {{ include "typo3.fullname" . }}-typo3
+      {{- end }}
+        - name: docroot
+      {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "typo3.fullname" .) }}
+      {{- else }}
+          emptyDir: {}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

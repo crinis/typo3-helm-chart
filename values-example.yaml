@@ -1,0 +1,39 @@
+ingress:
+  enabled: true
+  annotations:
+    certmanager.k8s.io/acme-challenge-type: http01
+    certmanager.k8s.io/cluster-issuer: letsencrypt
+  hosts:
+    - typo3.crinis.org
+  tls: 
+    - secretName: typo3.crinis.org
+      hosts:
+        - typo3.crinis.org
+
+image:
+  tag: 9.5
+
+persistence:
+  enabled: false
+  storageClass: 'local-storage'
+
+configurationFiles:
+  apache: {}
+    ## Specify custom values to override default Apache settings
+    ## You can name these files however you want
+    ## Some image specific default settings are already present in typo3.conf
+    ##
+    # typo3-helm.conf: |-
+
+  php:
+    ## Specify custom values to override default PHP settings
+    ## You can name these files however you want
+    ## Some image specific default settings are already present in typo3.ini
+    ##
+    typo3-helm.ini: |-
+      display_errors = Off
+
+mysql:
+  persistence:
+    enabled: false
+    storageClass: 'local-storage'

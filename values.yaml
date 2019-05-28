@@ -1,0 +1,186 @@
+# Default values for typo3.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  paths: 
+    - '/'
+  hosts:
+    - chart-example.local
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+## Enable persistence using Persistent Volume Claims
+## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+## This is shared among both the webserver and php deployments
+##
+persistence:
+  enabled: false
+  ## Persistent Volume Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  # storageClass: ""
+  ##
+  ## If you want to reuse an existing claim, you can pass the name of the PVC using
+  ## the existingClaim variable
+  # existingClaim: your-claim
+  accessMode: ReadWriteOnce
+  size: 15Gi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+image:
+  repository: crinis/typo3
+  tag: 9.5
+  pullPolicy: IfNotPresent
+
+typo3:
+  siteName: "TYPO3 CMS"
+
+  ## Set the initial admin username
+  ##
+  adminUsername: admin
+
+  ## Specify password for the default admin user and install tool
+  ## This is only valid after running helm install ...
+  ## Subsequent runs of helm upgrade will only update the Kubernetes secret, but not the password set in the database
+  ##
+  ## Default: random 10 character string
+  ##
+  # adminPassword: ShouldBeAStrongPassword
+
+  ## Set the TYPO3 Context
+  ##
+  context: Production
+
+  ## The TYPO3 version that will be installed
+  ## Only set this if you want to override the already contained TYPO3 version
+  ##
+  # version: 9.5.7
+
+  ## Set this to false to disable cleanup of non contained TYPO3 sources
+  ##
+  cleanupSources: true
+
+  ## Set this to false to disable any changes to your LocalConfiguration.php
+  ## It will still install TYPO3 and create an initial LocalConfiguration.php
+  ##
+  modifyLocalConfiguration: true
+
+  ## Set ServerAdmin Apache configuration
+  ## You can also overwrite the Apache configuration
+  ##
+  # apacheAdminEmail: admin@chart-example.local
+
+resources: {}
+# We usually recommend not to specify default resources and to leave this as a conscious
+# choice for the user. This also increases chances charts run on environments with little
+# resources, such as Minikube. If you do want to specify resources, uncomment the following
+# lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+# limits:
+#  cpu: 100m
+#  memory: 128Mi
+# requests:
+#  cpu: 100m
+#  memory: 128Mi
+
+configurationFiles:
+  apache: {}
+    ## Specify custom values to override default Apache settings
+    ## You can name these files however you want
+    ## Some image specific default settings are already present in typo3.conf
+    ##
+    # typo3-helm.conf: |-
+
+  php: {}
+    ## Specify custom values to override default PHP settings
+    ## You can name these files however you want
+    ## Some image specific default settings are already present in typo3.ini
+    ##
+    # typo3-helm.ini: |-
+
+  typo3: {}
+    ## Specify values of LocalConfiguration.php to be overriden or added
+    ## This will happen on every run
+    ## DB Credentials and SITE_NAME are set before to make Installation possible and should not be overriden here
+    ##
+    # local-configuration-overrides.yml: |-
+    #   SYS:
+    #     fileCreateMask: '0660'
+    #     folderCreateMask: '2770'
+
+## Credentials are automatically used for the TYPO3 deployment and configuration
+mysql: 
+  ## Specify password for root user
+  ##
+  ## Default: random 10 character string
+  # mysqlRootPassword: testing
+
+  ## Create a database user
+  ##
+  mysqlUser: typo3
+  ## Default: random 10 character string
+  # mysqlPassword:
+
+  ## Allow unauthenticated access, uncomment to enable
+  ##
+  # mysqlAllowEmptyPassword: true
+
+  ## Create a database
+  ##
+  mysqlDatabase: typo3
+  # Custom mysql configuration files used to override default mysql settings
+
+  configurationFiles: 
+    mysql_typo3.cnf: |-
+      [client]
+      default-character-set = utf8mb4
+
+      [mysql]
+      default-character-set = utf8mb4
+
+      [mysqld]
+      character-set-client-handshake = FALSE
+      character-set-server = utf8mb4
+      collation-server = utf8mb4_unicode_ci
+      sql_mode = IGNORE_SPACE,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+      
+  persistence:
+    enabled: false
+    ## Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    # storageClass: ""
+    ##
+    ## If you want to reuse an existing claim, you can pass the name of the PVC using
+    ## the existingClaim variable
+    # existingClaim: your-claim
+    accessMode: ReadWriteOnce
+    size: 10Gi
