@@ -1,4 +1,4 @@
 apiVersion: v1
 description: Run TYPO3 on Kubernetes
 name: typo3
-version: 0.1.0
+version: 0.2.0

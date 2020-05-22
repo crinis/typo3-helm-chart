@@ -58,6 +58,8 @@ image:
   pullPolicy: IfNotPresent
 
 typo3:
+  ## Sets the installations title.
+  ##
   siteName: "TYPO3 CMS"
 
   ## Set the initial admin username
@@ -76,14 +78,13 @@ typo3:
   ##
   context: Production
 
-  ## The TYPO3 version that will be installed
-  ## Only set this if you want to override the already contained TYPO3 version
+  ## Setup symlinks for TYPO3 source that is shipped with the image
   ##
-  # version: 9.5.7
+  setupSources: true
 
-  ## Set this to false to disable cleanup of non contained TYPO3 sources
+  ## Attempts to setup TYPO3 and adds a basic .htaccess file and cache configuration
   ##
-  cleanupSources: true
+  setup: true
 
   ## Set this to false to disable any changes to your LocalConfiguration.php
   ## It will still install TYPO3 and create an initial LocalConfiguration.php
@@ -121,16 +122,6 @@ configurationFiles:
     ## Some image specific default settings are already present in typo3.ini
     ##
     # typo3-helm.ini: |-
-
-  typo3: {}
-    ## Specify values of LocalConfiguration.php to be overriden or added
-    ## This will happen on every run
-    ## DB Credentials and SITE_NAME are set before to make Installation possible and should not be overriden here
-    ##
-    # local-configuration-overrides.yml: |-
-    #   SYS:
-    #     fileCreateMask: '0660'
-    #     folderCreateMask: '2770'
 
 ## Credentials are automatically used for the TYPO3 deployment and configuration
 mysql: 

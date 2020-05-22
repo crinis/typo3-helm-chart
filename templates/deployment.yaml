@@ -38,12 +38,10 @@ spec:
                   key: typo3-admin-password
             - name: TYPO3_CONTEXT
               value: {{ .Values.typo3.context | quote }}
-          {{- if .Values.typo3.version }}
-            - name: TYPO3_VERSION
-              value: {{ .Values.typo3.version | quote }}
-          {{- end }}
-            - name: CLEANUP_SRC
-              value: {{ .Values.typo3.cleanupSources | quote }}
+            - name: SETUP_TYPO3_SRC
+              value: {{ .Values.typo3.setupSources | quote }}
+            - name: SETUP_TYPO3
+              value: {{ .Values.typo3.setup | quote }}
             - name: MODIFY_LOCAL_CONFIGURATION
               value: {{ .Values.typo3.modifyLocalConfiguration | quote }}
           {{- if .Values.typo3.apacheAdminEmail }}
@@ -78,11 +76,6 @@ spec:
               mountPath: /usr/local/etc/php/conf.d/typo3-helm.ini
               subPath: typo3-helm.ini
           {{- end }}
-          {{- if .Values.configurationFiles.typo3 }}
-            - name: configuration-typo3
-              mountPath: /docker/config/local-configuration-overrides.yml
-              subPath: local-configuration-overrides.yml
-          {{- end }}
             - name: docroot
               mountPath: /var/www/html/
           resources:
@@ -97,11 +90,6 @@ spec:
         - name: configuration-php
           configMap:
             name: {{ include "typo3.fullname" . }}-php
-      {{- end }}
-      {{- if .Values.configurationFiles.typo3 }}
-        - name: configuration-typo3
-          configMap:
-            name: {{ include "typo3.fullname" . }}-typo3
       {{- end }}
         - name: docroot
       {{- if .Values.persistence.enabled }}
